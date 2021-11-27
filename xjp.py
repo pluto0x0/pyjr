@@ -1,5 +1,4 @@
 from functools import total_ordering
-from sre_constants import SRE_FLAG_UNICODE
 import requests
 import json
 import re
@@ -16,9 +15,18 @@ res = []
 def genDB():
     UA = 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_0) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11'
     MAX_PAGE = 200000000
+    
+    with open(DBfile, 'r', encoding='utf8') as ff:
+        old = json.loads(ff.read())
+    
+    ready = {i['articleid'] for i in old}
+    print(f'{len(ready)} articles ready.')
 
     def getArticle(articleID):
-        # print(articleID)
+        if articleID in ready:
+            print(f'! Atricle {articleID} EXISTS !')
+            return None
+
         url = f'http://jhsjk.people.cn/article/{articleID}'
         r = requests.get(url, headers={'User-Agent': UA})
 
@@ -35,28 +43,36 @@ def genDB():
                         paras)))
         except AttributeError:
             paras = ['']
-        # pp.pprint(paras)
+
+        print(f'Article {articleID} OK, length: {len(paras)} Paras')
         return {'articleid': articleID, 'title': title, 'paras': paras}
 
     page = 0
     res.clear()
     while True:
         url = f'http://jhsjk.people.cn/testnew/result?keywords=&isFuzzy=0&searchArea=0&year=0&form=0&type=0&page={page}&origin=%E5%85%A8%E9%83%A8&source=2'
-        # url = 'http://myip.ipip.net'
         r = requests.get(url, headers={'User-Agent': UA})
         data = r.json()['list']
         if data == [] or page > MAX_PAGE:
             break
 
+        bk = False
+        print(f'> Page {page} Start <')
         for i in data:
-            res.append(getArticle(i['article_id']))
-            print('.', end='')
-
-        print(page, 'OK')
+            art = getArticle(i['article_id'])
+            if art == None:
+                print('Exiting...')
+                bk = True
+                break
+            res.append(art)
+        print(f'> Page {page} Done <')
         page += 1
-
+        if bk:
+            break
+    
+    print(f'----------------\nOld: {len(old)} + New: {len(res)}')
     with open(DBfile, 'w', encoding='utf8') as ff:
-        ff.write(json.dumps(res, ensure_ascii=False))
+        ff.write(json.dumps(res + old, ensure_ascii=False))
 
 
 genDB()
