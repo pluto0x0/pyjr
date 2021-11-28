@@ -80,7 +80,8 @@
             Jinping is talkative, plase wait.<br>
             Loading data...<br>
         </span>
-        <img src="https://tva4.sinaimg.cn/large/006yDddpgy1gvm10mmajbg6074074ta802.gif" alt="Loading.." style="width: 5cm;" referrerpolicy="no-referrer">
+        <img src="https://tva4.sinaimg.cn/large/006yDddpgy1gvm10mmajbg6074074ta802.gif" alt="Loading.."
+            style="width: 5cm;" referrerpolicy="no-referrer">
     </div>
     <div id="main" style="display: none;">
         <h1>平语近人</h1>
@@ -97,35 +98,53 @@
     </div>
     <script>
         let tb = $('table');
+        $("input").keydown(function (event) {
+            if (event.keyCode == 13) {
+                $('button').click();
+            }
+        });
         $('button').click(function () {
             tb.html(`<tbody><tr><th>Paragraph</th><th>Source</th></tr></tbody>`);
 
-            let s = $('input:text').val();
+            let s = $('input:text').val().trim();
             if (s == '') s = '国之大者';
             if (s.length < 2) {
                 alert('too short!');
                 return;
             }
+            s = s.split(' ');
+            console.log(s);
             let intitle = $('#intitle').is(':checked');
 
-            function disp(str, k) {
-                return str.replace(k, `<span class="k">${k}</span>`)
+            function disp(str) {
+                for(i in s){
+                    str = str.replace(s[i], `<span class="k">${s[i]}</span>`);
+                }
+                return str;
             }
             function apd(x, y) {
-                tb.append(`<tr><td>${disp(x, s)}</th><th><a href="http://jhsjk.people.cn/article/${y}" target="_blank">${y}</a></td></tr>`);
+                tb.append(`<tr><td>${disp(x)}</th><th><a href="http://jhsjk.people.cn/article/${y}" target="_blank">${y}</a></td></tr>`);
             }
 
             for (let i in data) {
                 let x = data[i];
                 // console.log(x);
+                function search(x) {
+                    for (i in s) {
+                        if (x.indexOf(s[i]) == -1){
+                            return false;
+                        }
+                    }
+                    return true;
+                }
                 if (intitle) {
-                    if (x.title.indexOf(s) > -1) {
+                    if (search(x.title)) {
                         apd(x.title, x.articleid);
                     }
                 } else {
                     for (let j in x.paras) {
                         let y = x.paras[j]
-                        if (y.indexOf(s) > -1) {
+                        if (search(y)) {
                             apd(y, x.articleid);
                         }
                     }
