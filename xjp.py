@@ -30,7 +30,10 @@ def genDB():
         url = f'http://jhsjk.people.cn/article/{articleID}'
         r = requests.get(url, headers={'User-Agent': UA})
 
-        title = re.search(r'<h1>(.*?)</h1>', r.text, re.S).group(1)
+        try:
+            title = re.search(r'<h1>(.*?)</h1>', r.text, re.S).group(1)
+        except AttributeError:
+            title = 'unknown title'
         try:
             total = re.search(
                 r'<div class="d2txt_con clearfix">\s*<p>(.*?)</p>\s*</div>',
